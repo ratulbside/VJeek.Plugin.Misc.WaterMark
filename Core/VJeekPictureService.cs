@@ -248,6 +248,7 @@ namespace VJeek.Plugin.Misc.WaterMark.Core
 						string.Format("{0}_{1}.{2}", picture.Id.ToString("0000000"), seoFileName, lastPart) :
 						string.Format("{0}.{1}", picture.Id.ToString("0000000"), lastPart);
 					var thumbFilePath = GetThumbLocalPath(thumbFileName);
+					
 					if (!File.Exists(thumbFilePath))
 					{
 						if (pictureBinary != null)
@@ -279,6 +280,9 @@ namespace VJeek.Plugin.Misc.WaterMark.Core
 									ImageCodecInfo imageCodecInfo = this.GetImageCodecInfoFromExtension(lastPart) ??
 																	this.GetImageCodecInfoFromMimeType(picture.MimeType);
 									img.Save(thumbFilePath, imageCodecInfo, encoderParameters);
+
+
+
 								}
 							}
 						}
@@ -372,6 +376,44 @@ namespace VJeek.Plugin.Misc.WaterMark.Core
 				{
 					_logger.Error(ex.Message, ex);
 				}
+			}
+		}
+
+		/// <summary>
+		/// Returns the first ImageCodecInfo instance with the specified mime type.
+		/// </summary>
+		/// <param name="mimeType">Mime type</param>
+		/// <returns>ImageCodecInfo</returns>
+		protected virtual ImageCodecInfo GetImageCodecInfoFromMimeType(string mimeType)
+		{
+			var info = ImageCodecInfo.GetImageEncoders();
+			foreach (var ici in info)
+				if (ici.MimeType.Equals(mimeType, StringComparison.OrdinalIgnoreCase))
+					return ici;
+			return null;
+		}
+
+		/// <summary>
+		/// Returns the first ImageCodecInfo instance with the specified extension.
+		/// </summary>
+		/// <param name="fileExt">File extension</param>
+		/// <returns>ImageCodecInfo</returns>
+		protected virtual ImageCodecInfo GetImageCodecInfoFromExtension(string fileExt)
+		{
+			fileExt = fileExt.TrimStart(".".ToCharArray()).ToLower().Trim();
+			switch (fileExt)
+			{
+				case "jpg":
+				case "jpeg":
+					return GetImageCodecInfoFromMimeType("image/jpeg");
+				case "png":
+					return GetImageCodecInfoFromMimeType("image/png");
+				case "gif":
+					//use png codec for gif to preserve transparency
+					//return GetImageCodecInfoFromMimeType("image/gif");
+					return GetImageCodecInfoFromMimeType("image/png");
+				default:
+					return GetImageCodecInfoFromMimeType("image/jpeg");
 			}
 		}
 	}
